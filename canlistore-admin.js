@@ -1,4 +1,4 @@
-console.log("verze 19");
+console.log("verze 20");
 /* procentuální sleva u akční ceny */
 if (location.href.startsWith('https://www.artyrium.cz/admin/ceny/')) {
     document.querySelectorAll('input[name^="actionPrice["]').forEach(actionInput => {
@@ -752,19 +752,32 @@ poslatObjednavku(formattedDate,inputValue);
 /* vytvořit kalendář */
 
 const numberLiKalendar = document.createElement('li');
-numberLiKalendar.className = 'headerNavigation__link js-drawer-toggle';
+numberLiKalendar.className = 'headerNavigation__link';
+if (window.innerWidth < 500) {
+    numberLiKalendar.style.padding = "0 5px";
+  } else {
+    numberLiKalendar.style.padding = "0 12px";
+  }
 const buttonKalendar = document.createElement('button');
-buttonKalendar.textContent = "Kalendář";
-buttonKalendar.style.backgroundColor = "#FF634755";
-buttonKalendar.style.backgroundColor = "#91ceff";
+buttonKalendar.innerHTML = `
+  <svg xmlns="http://www.w3.org/2000/svg" 
+       width="20" height="20" viewBox="0 0 24 24" 
+       fill="none" stroke="currentColor" 
+       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+    <line x1="16" y1="2" x2="16" y2="6"></line>
+    <line x1="8" y1="2" x2="8" y2="6"></line>
+    <line x1="3" y1="10" x2="21" y2="10"></line>
+  </svg>
+`;
+buttonKalendar.setAttribute("aria-label", "Kalendář");
+
 buttonKalendar.style.display = "block";
 buttonKalendar.style.zIndex = "10000";
-buttonKalendar.style.margin = "10px auto";
-buttonKalendar.style.fontSize = "16px";
-buttonKalendar.style.padding = "5px 5px";
 buttonKalendar.style.cursor = "pointer";
-buttonKalendar.style.border = "1px solid";
-buttonKalendar.style.border = "1px solid #5994c4";
+buttonKalendar.style.background = "none";
+buttonKalendar.style.border = "none";
+buttonKalendar.style.color = "white";
 numberLiKalendar.appendChild(buttonKalendar);
 
 const targetElementProKalendar = document.querySelector(
@@ -1001,18 +1014,33 @@ console.warn('.cashdesk-search-result element not found.');
 const csvUrl = "https://www.artyrium.cz/export/products.csv?patternId=11&partnerId=14&hash=fb37ca04338a033910bb58806735dfd92f8abe968e8d7c8f83c3bbc2ed58f6b2&stockState=4";
 // --- 1️⃣ Vytvoření tlačítka Produkty ---
 const numberLiProdukty = document.createElement('li');
-numberLiProdukty.className = 'headerNavigation__link js-drawer-toggle';
-
+numberLiProdukty.className = 'headerNavigation__link';
+if (window.innerWidth < 400) {
+    numberLiProdukty.style.padding = "0 5px";
+  } else {
+    numberLiProdukty.style.padding = "0 12px";
+  }
 const buttonProdukty = document.createElement('button');
-buttonProdukty.textContent = "Produkty";
-buttonProdukty.style.backgroundColor = "#ffad9e";
+buttonProdukty.innerHTML = `
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="20" height="20" viewBox="0 0 24 24"
+     fill="none" stroke="currentColor"
+     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <line x1="8" y1="6" x2="21" y2="6"></line>
+  <line x1="8" y1="12" x2="21" y2="12"></line>
+  <line x1="8" y1="18" x2="21" y2="18"></line>
+  <circle cx="4" cy="6" r="1"></circle>
+  <circle cx="4" cy="12" r="1"></circle>
+  <circle cx="4" cy="18" r="1"></circle>
+</svg>
+`;
 buttonProdukty.style.display = "block";
 buttonProdukty.style.zIndex = "10000";
-buttonProdukty.style.margin = "10px auto";
-buttonProdukty.style.fontSize = "16px";
-buttonProdukty.style.padding = "5px 5px";
 buttonProdukty.style.cursor = "pointer";
-buttonProdukty.style.border = "1px solid #d06e5c";
+buttonProdukty.style.background = "none";
+buttonProdukty.style.border = "none";
+buttonProdukty.style.color = "white";
+
 numberLiProdukty.appendChild(buttonProdukty);
 
 // --- 2️⃣ Vložení tlačítka vedle Kalendáře ---
@@ -1250,3 +1278,25 @@ zobrazProdukty();
 });
 
 /* END zobrazení skladových zásob produktů END */
+/* zobrazení icon pro mobil */ 
+function applyHeaderLinkPadding() {
+  const links = document.querySelectorAll('a.headerNavigation__link');
+
+  if (window.innerWidth < 500) {
+    links.forEach(link => {
+      link.style.padding = '0 5px';
+    });
+  } else {
+    links.forEach(link => {
+      link.style.padding = '';
+    });
+  }
+}
+
+// při načtení
+applyHeaderLinkPadding();
+
+// při změně velikosti
+window.addEventListener('resize', applyHeaderLinkPadding);
+
+/* END zobrazení icon pro mobil END */ 
