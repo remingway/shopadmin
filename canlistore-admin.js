@@ -1,4 +1,4 @@
-console.log("verze 20");
+console.log("verze 21");
 /* procentuální sleva u akční ceny */
 if (location.href.startsWith('https://www.artyrium.cz/admin/ceny/')) {
     document.querySelectorAll('input[name^="actionPrice["]').forEach(actionInput => {
@@ -749,6 +749,27 @@ poslatObjednavku(formattedDate,inputValue);
 }
 
 /* END kontrola custom produktu a odeslání do google sheet END */
+/* zobrazení icon pro mobil */ 
+
+function applyHeaderLinkPadding() {
+  const links = document.querySelectorAll('a.headerNavigation__link');
+
+  if (window.innerWidth < 500) {
+    links.forEach(link => {
+      link.style.padding = '0 5px';
+    });
+  } else {
+    links.forEach(link => {
+      link.style.padding = '';
+    });
+  }
+}
+// při načtení
+applyHeaderLinkPadding();
+// při změně velikosti
+window.addEventListener('resize', applyHeaderLinkPadding);
+
+/* END zobrazení icon pro mobil END */
 /* vytvořit kalendář */
 
 const numberLiKalendar = document.createElement('li');
@@ -1116,6 +1137,7 @@ const categories = {};
 
 const headers = rows[0].map(h => h.replace(/^"|"$/g, "").trim());
 
+const idxImage = headers.indexOf("image");
 const idxName = headers.indexOf("name");
 const idxCategory = headers.indexOf("defaultCategory");
 const idxStock = headers.indexOf("stock");
@@ -1143,7 +1165,19 @@ const variants = variantIndexes
             const displayName = variants ? `${colC} (${variants})` : colC;
 
 if (!categories[categoryName]) categories[categoryName] = [];
-categories[categoryName].push({ name: displayName, value: colE });
+let imageUrl = cols[idxImage];
+
+// úprava cesty obrázku
+if (imageUrl && imageUrl.includes("/orig/")) {
+    imageUrl = imageUrl.replace("/orig/", "/detail/");
+}
+
+categories[categoryName].push({
+    name: displayName,
+    value: colE,
+    image: imageUrl
+});
+
 }
 }
 
@@ -1239,8 +1273,53 @@ updateRowColor();
 };
 
 row.appendChild(productBtn);
-const textNode = document.createTextNode(`${item.name} — ${item.value}`);
-row.appendChild(textNode);
+
+console.log("Produkt:", item.name, "image:", item.image);
+
+// --- obrázek produktu ---
+if (item.image) {
+    const img = document.createElement("img");
+    img.src = item.image;
+    img.alt = item.name;
+    img.style.width = "32px";
+    img.style.height = "32px";
+    img.style.objectFit = "cover";
+    img.style.borderRadius = "4px";
+    img.style.marginRight = "8px";
+    img.style.flexShrink = "0";
+    img.onerror = () => console.warn("Nepodařilo se načíst obrázek:", imageUrl);
+    row.appendChild(img);
+}
+
+// --- text produktu ---
+// --- text produktu (klikatelné jen jméno) ---
+const productLink = document.createElement("a");
+
+const searchUrl =
+  "https://www.artyrium.cz/admin/vyhledavani/?string=" +
+  encodeURIComponent(item.name);
+
+productLink.href = searchUrl;
+productLink.textContent = `${item.name}: ${item.value}`;
+productLink.target = "_blank"; // otevře v novém panelu
+productLink.rel = "noopener noreferrer";
+
+// styling odkazu, aby nevypadal jako klasický link
+productLink.style.color = "#222";
+productLink.style.textDecoration = "none";
+productLink.style.cursor = "pointer";
+
+productLink.onmouseenter = () => {
+  productLink.style.textDecoration = "underline";
+};
+
+productLink.onmouseleave = () => {
+  productLink.style.textDecoration = "none";
+};
+
+row.appendChild(productLink);
+
+
 
 catDiv.appendChild(row);
 });
@@ -1278,25 +1357,3 @@ zobrazProdukty();
 });
 
 /* END zobrazení skladových zásob produktů END */
-/* zobrazení icon pro mobil */ 
-function applyHeaderLinkPadding() {
-  const links = document.querySelectorAll('a.headerNavigation__link');
-
-  if (window.innerWidth < 500) {
-    links.forEach(link => {
-      link.style.padding = '0 5px';
-    });
-  } else {
-    links.forEach(link => {
-      link.style.padding = '';
-    });
-  }
-}
-
-// při načtení
-applyHeaderLinkPadding();
-
-// při změně velikosti
-window.addEventListener('resize', applyHeaderLinkPadding);
-
-/* END zobrazení icon pro mobil END */ 
