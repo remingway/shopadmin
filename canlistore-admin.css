@@ -1,5 +1,6 @@
 /* version: 2.1 */
 
+/* pokladna */
 .cashdesk-products-listing .product div{
 	height: auto !important;
 }
@@ -18,7 +19,10 @@
 .cashdesk-product-image img{
 	width: auto;
 }
+
+/* END pokladna END */
 /* zobrazení skladových zásob produktů */
+
 #produktyContainer {
   position: relative;
 }
