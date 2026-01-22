@@ -1,4 +1,4 @@
-console.log("js version: 21.1");
+console.log("verze 25.0");
 /* procentuální sleva u akční ceny */
 if (location.href.startsWith('https://www.artyrium.cz/admin/ceny/')) {
     document.querySelectorAll('input[name^="actionPrice["]').forEach(actionInput => {
@@ -1084,8 +1084,8 @@ position: "fixed",
 top: "50%",
 left: "50%",
 transform: "translate(-50%, -50%)",
-width: "90vw",
-height: "90vh",
+width: "95vw",
+height: "95vh",
 background: "rgba(250,250,250,0.97)",
 zIndex: 999999,
 overflowY: "auto",
@@ -1182,151 +1182,108 @@ categories[categoryName].push({
 
 const container = document.createElement("div");
 container.id = "produktyContainer";
-container.style.display = "flex";
-container.style.flexWrap = "wrap";
-container.style.gap = "20px";
+container.style.columnCount = "auto";
+container.style.columnWidth = "260px"; // šířka sloupce
+container.style.columnGap = "20px";
 overlay.appendChild(container);
 
 function renderCategories() {
-container.innerHTML = ""; // vyprázdníme container
+  container.innerHTML = "";
 
-const sortedCategoryNames = Object.keys(categories).sort((a, b) => {
-const aVal = localStorage.getItem("cat_" + a) === "red" ? 1 : 0;
-const bVal = localStorage.getItem("cat_" + b) === "red" ? 1 : 0;
-return bVal - aVal; // červené nahoře
-});
+  const columnWidth = 260;
+  const gap = 20;
 
-sortedCategoryNames.forEach(cat => {
-const catDiv = document.createElement("div");
-catDiv.style.minWidth = "200px";
-catDiv.style.marginBottom = "15px";
-catDiv.style.border = "1px solid #ccc";
-catDiv.style.borderRadius = "12px";
-catDiv.style.padding = "10px";
-catDiv.style.boxShadow = "0 2px 6px rgba(0,0,0,0.08)";
-catDiv.style.backgroundColor = "#f0f0f0";
+  const containerWidth = container.clientWidth;
+  const columnCount = Math.max(
+    1,
+    Math.floor((containerWidth + gap) / (columnWidth + gap))
+  );
 
-const catHeading = document.createElement("h3");
-catHeading.style.display = "inline-block";
-catHeading.style.margin = "0 0 10px 0";
-catHeading.style.padding = "4px 8px";
-catHeading.style.borderRadius = "6px";
-catHeading.style.cursor = "pointer";
-catHeading.style.transition = "background 0.3s";
-catHeading.textContent = cat;
+  const columnHeights = new Array(columnCount).fill(0);
+  container.style.position = "relative";
 
-const catStates = ["", "red"];
-let catState = localStorage.getItem("cat_" + cat) || "";
-const softRed = "#ff6b6b";
-if (catState === "red") catHeading.style.background = softRed;
+  // červené kategorie první
+  const sortedCategoryNames = Object.keys(categories).sort((a, b) => {
+    const ar = localStorage.getItem("cat_" + a) === "red";
+    const br = localStorage.getItem("cat_" + b) === "red";
+    return Number(br) - Number(ar);
+  });
 
-catHeading.onclick = () => {
-const idx = catStates.indexOf(catState);
-catState = catStates[(idx + 1) % catStates.length];
-localStorage.setItem("cat_" + cat, catState);
-catHeading.style.background = catState === "red" ? softRed : "";
-renderCategories(); // znovu vykreslíme kategorie, aby se červené dostaly nahoru
-};
+  sortedCategoryNames.forEach(cat => {
+    const catDiv = document.createElement("div");
+    catDiv.className = "produkty-category";
 
-catDiv.appendChild(catHeading);
+    let catState = localStorage.getItem("cat_" + cat) || "";
+    if (catState === "red") catDiv.classList.add("red");
 
-// Seřadíme produkty podle hodnoty (sloupec E) – od nejnižšího po nejvyšší
-categories[cat]
-    .sort((a, b) => a.value - b.value)
-    .forEach(item => {
-const row = document.createElement("div");
-row.style.padding = "2px 0";
-row.style.display = "flex";
-row.style.alignItems = "center";
-row.style.borderRadius = "6px";
-row.style.transition = "background 0.3s";
+    const heading = document.createElement("h3");
+    heading.textContent = cat;
+    heading.onclick = () => {
+      catState = catState === "red" ? "" : "red";
+      localStorage.setItem("cat_" + cat, catState);
+      renderCategories();
+    };
 
-const productStates = ["", "!", "✓"];
-let prodState = localStorage.getItem("prod_" + cat + "_" + item.name) || "";
+    catDiv.appendChild(heading);
 
-const productBtn = document.createElement("button");
-productBtn.textContent = prodState;
-productBtn.style.width = "26px";
-productBtn.style.height = "26px";
-productBtn.style.marginRight = "8px";
-productBtn.style.cursor = "pointer";
-productBtn.style.border = "1px solid #ccc";
-productBtn.style.borderRadius = "6px";
-productBtn.style.backgroundColor = "#e0e0e0";
-productBtn.style.transition = "background 0.2s";
+    categories[cat]
+      .sort((a, b) => a.value - b.value)
+      .forEach(item => {
+        const row = document.createElement("div");
+        row.className = "produkty-row";
 
-const updateRowColor = () => {
-if (prodState === "!") row.style.backgroundColor = "#ffd6d6";
-else if (prodState === "✓") row.style.backgroundColor = "#d6ffd6";
-else row.style.backgroundColor = "transparent";
-};
+        const states = ["", "!", "✓"];
+        let prodState =
+          localStorage.getItem("prod_" + cat + "_" + item.name) || "";
 
-updateRowColor();
+        if (prodState === "!") row.classList.add("state-alert");
+        if (prodState === "✓") row.classList.add("state-ok");
 
-productBtn.onclick = () => {
-const idx = productStates.indexOf(prodState);
-prodState = productStates[(idx + 1) % productStates.length];
-productBtn.textContent = prodState;
-localStorage.setItem("prod_" + cat + "_" + item.name, prodState);
-updateRowColor();
-};
+        const btn = document.createElement("button");
+        btn.className = "produkty-state-btn";
+        btn.textContent = prodState;
 
-row.appendChild(productBtn);
+        btn.onclick = () => {
+          const i = states.indexOf(prodState);
+          prodState = states[(i + 1) % states.length];
+          localStorage.setItem("prod_" + cat + "_" + item.name, prodState);
+          renderCategories();
+        };
 
-console.log("Produkt:", item.name, "image:", item.image);
+        row.appendChild(btn);
 
-// --- obrázek produktu ---
-if (item.image) {
-    const img = document.createElement("img");
-    img.src = item.image;
-    img.alt = item.name;
-    img.style.width = "32px";
-    img.style.height = "32px";
-    img.style.objectFit = "cover";
-    img.style.borderRadius = "4px";
-    img.style.marginRight = "8px";
-    img.style.flexShrink = "0";
-    img.onerror = () => console.warn("Nepodařilo se načíst obrázek:", imageUrl);
-    row.appendChild(img);
-}
+        if (item.image) {
+          const img = document.createElement("img");
+          img.src = item.image;
+          img.alt = item.name;
+          row.appendChild(img);
+        }
 
-// --- text produktu ---
-// --- text produktu (klikatelné jen jméno) ---
-const productLink = document.createElement("a");
+        const link = document.createElement("a");
+        link.href =
+          "https://www.artyrium.cz/admin/vyhledavani/?string=" +
+          encodeURIComponent(item.name);
+        link.textContent = `${item.name}: ${item.value}`;
+        link.target = "_blank";
 
-const searchUrl =
-  "https://www.artyrium.cz/admin/vyhledavani/?string=" +
-  encodeURIComponent(item.name);
+        row.appendChild(link);
+        catDiv.appendChild(row);
+      });
 
-productLink.href = searchUrl;
-productLink.textContent = `${item.name}: ${item.value}`;
-productLink.target = "_blank"; // otevře v novém panelu
-productLink.rel = "noopener noreferrer";
+    container.appendChild(catDiv);
 
-// styling odkazu, aby nevypadal jako klasický link
-productLink.style.color = "#222";
-productLink.style.textDecoration = "none";
-productLink.style.cursor = "pointer";
+    // masonry pozice
+    const col = columnHeights.indexOf(Math.min(...columnHeights));
+    const x = col * (columnWidth + gap);
+    const y = columnHeights[col];
 
-productLink.onmouseenter = () => {
-  productLink.style.textDecoration = "underline";
-};
+    catDiv.style.transform = `translate(${x}px, ${y}px)`;
+    columnHeights[col] += catDiv.offsetHeight + gap;
+  });
+  container.style.height = Math.max(...columnHeights) + "px";
+	const loading = document.getElementById("produktyLoading");
+	if (loading) loading.style.display = "none";
 
-productLink.onmouseleave = () => {
-  productLink.style.textDecoration = "none";
-};
-
-row.appendChild(productLink);
-
-
-
-catDiv.appendChild(row);
-});
-
-container.appendChild(catDiv);
-});
-
-document.getElementById("produktyLoading").style.display = "none";
 }
 
 renderCategories(); // první vykreslení
@@ -1353,6 +1310,12 @@ overlay.style.display = overlay.style.display === "none" || overlay.style.displa
 // Pokud overlay ještě neexistuje, vytvoříme jej
 zobrazProdukty();
 }
+});
+
+window.addEventListener("resize", () => {
+  if (document.getElementById("produktyOverlay")) {
+    renderCategories();
+  }
 });
 
 /* END zobrazení skladových zásob produktů END */
