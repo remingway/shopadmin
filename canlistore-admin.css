@@ -1,5 +1,5 @@
 .cashdesk-products-listing .product .cashdesk-product-image{
-	height: auto;
+	height: auto !important;
 }
 .cashdesk-products-listing .product{
 	margin: 2px 0;
