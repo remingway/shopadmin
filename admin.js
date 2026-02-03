@@ -1,4 +1,4 @@
-console.log("js verze 26.2");
+console.log("js verze 26.3");
 /* procentuální sleva u akční ceny */
 if (location.href.startsWith("https://www.artyrium.cz/admin/ceny/")) {
     document.querySelectorAll('input[name^="actionPrice["]').forEach((actionInput) => {
