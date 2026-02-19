@@ -1,5 +1,12 @@
-/* css verze: 25.0 */
-
+/* css verze: 26.0 */
+/* poznámka u objednávky */
+.preview-item.preview-item-note span{
+	white-space: pre-line;
+}
+.small-6{
+	width: auto;
+}
+/* END poznámka u objednávky END */
 /* pokladna */
 .cashdesk-products-listing .product div{
 	height: auto !important;
