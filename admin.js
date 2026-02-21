@@ -1,4 +1,4 @@
-console.log("js verze 26.3");
+console.log("js verze 27.0");
 /* procentuální sleva u akční ceny */
 if (location.href.startsWith("https://www.artyrium.cz/admin/ceny/")) {
     document.querySelectorAll('input[name^="actionPrice["]').forEach((actionInput) => {
@@ -1113,3 +1113,82 @@ window.addEventListener("resize", () => {
 });
 
 /* END zobrazení skladových zásob produktů END */
+/* tlačítka kopírování ve statistikách */
+
+if (location.href.startsWith("https://www.artyrium.cz/admin/statistika-produktu/")) {
+    const table = document.querySelector("table.table.checkbox-table tbody");
+
+    let globalSumNumber = 0;
+    let globalSumPrice = 0;
+
+    if (table) {
+        const rows = table.querySelectorAll("tr");
+
+        rows.forEach((row, rowIndex) => {
+            const numbers = row.querySelectorAll(".table__cell--number");
+            const prices = row.querySelectorAll(".table__cell--price");
+
+            if (numbers.length >= 2 && prices.length >= 1) {
+                const priceEl = prices[0]; // 1. výskyt price
+                const numberEl = numbers[1]; // 2. výskyt number
+                const buttonContainer = numbers[0]; // kam vložíme tlačítka
+
+                const cleanPrice = Number(priceEl.innerText.replace(/\s/g, "").replace("Kč", "").trim());
+                const cleanNumber = Number(numberEl.innerText.trim());
+
+                // vymažeme obsah containeru
+                buttonContainer.innerHTML = "";
+
+                // tlačítko: KOPÍROVAT (reset globálního součtu)
+                const copyBtn = document.createElement("button");
+                copyBtn.textContent = "📋";
+                copyBtn.style.marginRight = "6px";
+                copyBtn.style.cursor = "pointer";
+
+                // tlačítko: PŘIČÍST k předchozímu globálnímu součtu
+                const addBtn = document.createElement("button");
+                addBtn.textContent = "➕";
+                addBtn.style.cursor = "pointer";
+
+                // event: 📋 tlačítko
+                copyBtn.addEventListener("click", () => {
+                    globalSumPrice = cleanPrice;
+                    globalSumNumber = cleanNumber;
+
+                    const textToCopy = `${globalSumNumber}\t${globalSumPrice}`;
+                    navigator.clipboard.writeText(textToCopy);
+
+                    // vizuálně označí aktivní tlačítko
+                    copyBtn.classList.add("active-btn");
+                    addBtn.classList.remove("active-btn");
+
+                    // reset ostatních řádků
+                    rows.forEach((otherRow) => {
+                        if (otherRow !== row) {
+                            const otherButtons = otherRow.querySelectorAll("button");
+                            otherButtons.forEach((btn) => btn.classList.remove("active-btn"));
+                        }
+                    });
+                });
+
+                // event: ➕ tlačítko
+                addBtn.addEventListener("click", () => {
+                    globalSumPrice += cleanPrice;
+                    globalSumNumber += cleanNumber;
+
+                    const textToCopy = `${globalSumNumber}\t${globalSumPrice}`;
+                    navigator.clipboard.writeText(textToCopy);
+
+                    // vizuálně označí samo, ostatní necháme
+                    addBtn.classList.add("active-btn");
+                });
+
+                // vložíme tlačítka
+                buttonContainer.appendChild(copyBtn);
+                buttonContainer.appendChild(addBtn);
+            }
+        });
+    }
+}
+
+/* END tlačítka kopírování ve statistikách END */
