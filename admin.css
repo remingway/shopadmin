@@ -1,4 +1,9 @@
-/* css verze: 27.0 */
+/* css verze: 28.0 */
+/* kopírovací button pro statistiky */
+button.active-btn {
+    background-color: #4CAF50;
+    color: white;
+  }
 #chart, #chart-legend {display: none;} /* statistiky bez koláče */
 /* poznámka u objednávky */
 .preview-item.preview-item-note span{
