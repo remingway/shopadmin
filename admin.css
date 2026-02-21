@@ -1,4 +1,5 @@
-/* css verze: 26.0 */
+/* css verze: 27.0 */
+#chart, #chart-legend {display: none;} /* statistiky bez koláče */
 /* poznámka u objednávky */
 .preview-item.preview-item-note span{
 	white-space: pre-line;
