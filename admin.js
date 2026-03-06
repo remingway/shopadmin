@@ -1,6 +1,6 @@
-console.log("js verze 27.0");
+console.log("js verze 28.0");
 /* procentuální sleva u akční ceny */
-if (location.href.startsWith("https://www.artyrium.cz/admin/ceny/")) {
+if (location.href.includes("/admin/ceny/")) {
     document.querySelectorAll('input[name^="actionPrice["]').forEach((actionInput) => {
         const row = actionInput.closest("tr");
         if (!row) return;
@@ -104,7 +104,7 @@ anchors.forEach((anchorSelector) => {
 /* END vždy zobrazit přehled u objednávek a produktů END */
 /* označení více jak 1 ks v objednávce */
 
-if (location.href.startsWith("https://www.artyrium.cz/admin/prehled-objednavek/")) {
+if (location.href.includes("/admin/prehled-objednavek/")) {
     setInterval(function () {
         var cells = document.querySelectorAll(".table__cell--number");
         cells.forEach(function (cell) {
@@ -118,7 +118,7 @@ if (location.href.startsWith("https://www.artyrium.cz/admin/prehled-objednavek/"
 /* END označení více jak 1 ks v objednávce END */
 /* Kontrola Dobírek a přehození do vyřizuje se */
 
-if (location.href.startsWith("https://www.artyrium.cz/admin/prehled-objednavek/")) {
+if (location.href.includes("/admin/prehled-objednavek/")) {
     var dropdownList = document.querySelectorAll("ul.dropdown-ready li");
     if (dropdownList[7].classList.contains("active")) {
         var divSelectElement = document.querySelectorAll("td div.v2FormField__select");
@@ -210,7 +210,7 @@ if (location.href.startsWith("https://www.artyrium.cz/admin/prehled-objednavek/"
 /* END Kontrola osobní odběr v nevyřizenýcha přehození do vyřizuje se END */
 /* počet dnů u datumu */
 
-if (location.href.startsWith("https://www.artyrium.cz/admin/prehled-objednavek/")) {
+if (location.href.includes("/admin/prehled-objednavek/")) {
     var spans = document.querySelectorAll("span.grey.nowrap");
     if (spans.length > 0) {
         var currentDate = new Date();
@@ -297,7 +297,7 @@ if (document.querySelector("tbody")) {
         removeTabindex();
     }
 
-    if (location.href.startsWith("https://www.artyrium.cz/admin/produkty/")) {
+    if (location.href.includes("/admin/produkty/")) {
         const toggleButtonElement = document.querySelector(".content-buttons");
         const buttonSpan = document.createElement("span");
         const buttonA = document.createElement("a");
@@ -364,7 +364,7 @@ function removeTabindex() {
 /* END přepínání tabování mezi sloupci a řádky - další tlačítko u "uložit" END */
 /* zvýraznění přehazování objednávek do odesláno */
 
-if (location.href.startsWith("https://www.artyrium.cz/admin/prehled-objednavek/")) {
+if (location.href.includes("/admin/prehled-objednavek/")) {
     var dropdownLists = document.querySelectorAll("ul.dropdown-ready li");
     if (dropdownLists[5].classList.contains("active")) {
         var originalButton1 = document.querySelectorAll('a[data-custom-action="openCreateAndPrintShipmentsModal"]')[1];
@@ -472,7 +472,7 @@ const linksMap = {
     "Černobílý Neobyčejný diář 2026 k tisku": "https://drive.google.com/file/d/1POZ0u77yInIx-25PVUR97pe5q6vcvDiJ/view?usp=drive_link",
     "Barevný Neobyčejný diář 2026 k tisku": "https://drive.google.com/file/d/1X80YnEMOj9vPN_28tgP8Bxkka3P86Vx9/view?usp=sharing",
 };
-if (location.href.startsWith("https://www.artyrium.cz/admin/objednavky-detail")) {
+if (location.href.includes("/admin/objednavky-detail")) {
     document.addEventListener("click", function (event) {
         // Zkontrolujeme, zda kliknutí bylo na odkaz uvnitř elementu s třídou 'open-modal'
         if (event.target.closest(".open-modal a")) {
@@ -810,7 +810,7 @@ function updateImageSrc() {
     });
 }
 
-if (location.href.startsWith("https://www.artyrium.cz/admin/pokladna/")) {
+if (location.href.includes("/admin/pokladna/")) {
     updateImageSrc();
 
     // Nastavení MutationObserver pro sledování změn v .cashdesk-search-result
@@ -1115,7 +1115,7 @@ window.addEventListener("resize", () => {
 /* END zobrazení skladových zásob produktů END */
 /* tlačítka kopírování ve statistikách */
 
-if (location.href.startsWith("https://www.artyrium.cz/admin/statistika-produktu/")) {
+if (location.href.includes("/admin/statistika-produktu/")) {
     const table = document.querySelector("table.table.checkbox-table tbody");
 
     let globalSumNumber = 0;
@@ -1192,3 +1192,154 @@ if (location.href.startsWith("https://www.artyrium.cz/admin/statistika-produktu/
 }
 
 /* END tlačítka kopírování ve statistikách END */
+/* neuhrazená dobírka generování QR kódů */
+
+if (location.href.includes("/admin/objednavky-detail")) {
+    document.addEventListener("click", function (event) {
+        const link = event.target.closest('a[href*="/admin/zaslat-zakaznikovi-email/"]');
+
+        if (!link) return;
+
+        if (!link.textContent.includes("nevyzvednutá dobírka")) return;
+
+        console.log("Kliknuto na email 'nevyzvednutá dobírka - upozornění'");
+
+        setTimeout(function () {
+            var iframe = document.getElementById("description_ifr");
+
+            if (!iframe) {
+                console.error("iframe nenalezen");
+                return;
+            }
+
+            var doc = iframe.contentDocument || iframe.contentWindow.document;
+
+            var paragraphs = doc.getElementsByTagName("p");
+
+            var accountRaw = null;
+            var vs = null;
+            var amountFromText = null;
+
+            for (var i = 0; i < paragraphs.length; i++) {
+                var p = paragraphs[i];
+
+                if (p.innerText.includes("Číslo účtu")) {
+                    console.log("Platební údaje nalezeny");
+
+                    var accMatch = p.innerText.match(/Číslo účtu:\s*([0-9\/\-]+)/);
+                    var vsMatch = p.innerText.match(/Variabilní symbol platby:\s*([0-9]+)/);
+                    var amountMatch = p.innerText.match(/Částka:\s*([0-9]+)/);
+
+                    if (accMatch) accountRaw = accMatch[1];
+                    if (vsMatch) vs = vsMatch[1];
+                    if (amountMatch) amountFromText = amountMatch[1];
+
+                    break;
+                }
+            }
+
+            if (!accountRaw || !vs) {
+                console.error("Účet nebo VS nenalezen");
+                return;
+            }
+
+            if (!amountFromText) {
+                console.error("Částka nenalezena");
+                return;
+            }
+
+            console.log("Účet:", accountRaw);
+            console.log("VS:", vs);
+            console.log("Částka z textu:", amountFromText);
+
+            // převod na IBAN
+            function accountToIBAN(account) {
+                let parts = account.split("/");
+                let accountNumber = parts[0];
+                let bankCode = parts[1];
+
+                let prefix = "";
+                let number = accountNumber;
+
+                if (accountNumber.includes("-")) {
+                    let split = accountNumber.split("-");
+                    prefix = split[0];
+                    number = split[1];
+                }
+
+                prefix = prefix.padStart(6, "0");
+                number = number.padStart(10, "0");
+
+                let bban = bankCode + prefix + number;
+
+                let country = "CZ";
+                let converted = bban + country + "00";
+
+                let numeric = converted.replace(/[A-Z]/g, function (char) {
+                    return char.charCodeAt(0) - 55;
+                });
+
+                let mod = BigInt(numeric) % 97n;
+
+                let check = (98n - mod).toString();
+
+                if (check.length === 1) check = "0" + check;
+
+                return country + check + bban;
+            }
+
+            var iban = accountToIBAN(accountRaw);
+
+            console.log("Vypočtený IBAN:", iban);
+
+            var expectedIBAN = "CZ3020100000002102759244";
+
+            if (iban !== expectedIBAN) {
+                console.error("IBAN se neshoduje!");
+                console.error("Očekávaný IBAN:", expectedIBAN);
+                console.error("Vypočtený IBAN:", iban);
+
+                return;
+            }
+
+            console.log("IBAN kontrola OK");
+
+            // QR generátor
+            function generateQR(amount) {
+                return "SPD*1.0*" + "ACC:" + iban + "*AM:" + amount + "*CC:CZK" + "*X-VS:" + vs + "*X-PER:7";
+            }
+
+            var qrURL1 =
+                "https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=" +
+                encodeURIComponent(generateQR(amountFromText));
+
+            var qrURL2 =
+                "https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=" + encodeURIComponent(generateQR(100));
+
+            var qrTarget1 = doc.getElementById("QRkod1");
+            var qrTarget2 = doc.getElementById("QRkod2");
+
+            if (!qrTarget1) {
+                console.error("QRkod1 nenalezen");
+            }
+
+            if (!qrTarget2) {
+                console.error("QRkod2 nenalezen");
+            }
+
+            if (qrTarget1) {
+                qrTarget1.innerHTML =
+                    '<img src="' + qrURL1 + '" style="padding:15px;background:white;width:105px;height:105px;">';
+            }
+
+            if (qrTarget2) {
+                qrTarget2.innerHTML =
+                    '<img src="' + qrURL2 + '" style="padding:15px;background:white;width:105px;height:105px;">';
+            }
+
+            console.log("QR kódy vloženy");
+        }, 1000);
+    });
+}
+
+/* END neuhrazená dobírka generování QR kódů END */
