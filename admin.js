@@ -1,4 +1,4 @@
-console.log("js verze 28.0");
+console.log("js verze 28.1");
 /* procentuální sleva u akční ceny */
 if (location.href.includes("/admin/ceny/")) {
     document.querySelectorAll('input[name^="actionPrice["]').forEach((actionInput) => {
@@ -468,7 +468,7 @@ const linksMap = {
     "Spoření k tisku": "https://drive.google.com/drive/folders/1W2LwjgsSqy88jDmHq6CI4pX3EZhxFS2O?usp=drive_link",
     "Učitelský zápisník - PDF k tisku": "https://drive.google.com/drive/folders/1nM7_M6WufM9EzWHLBS8NHRFwbzbqQVwG?usp=drive_link",
     "Zápisník asistenta pedagoga - PDF k tisku": "https://drive.google.com/drive/folders/1BkOOukxKUVjmZQeaxk-NXTi35bXfiObl?usp=drive_link",
-    "Zápisník pro Mateřské školy - PDF k tisku": "https://drive.google.com/drive/folders/17rPMDxw9C1l6tZ9UoJyjPM_EfuxAV09A?usp=drive_link",
+    "Zápisník pro mateřské školy - PDF k tisku": "https://drive.google.com/drive/folders/17rPMDxw9C1l6tZ9UoJyjPM_EfuxAV09A?usp=drive_link",
     "Černobílý Neobyčejný diář 2026 k tisku": "https://drive.google.com/file/d/1POZ0u77yInIx-25PVUR97pe5q6vcvDiJ/view?usp=drive_link",
     "Barevný Neobyčejný diář 2026 k tisku": "https://drive.google.com/file/d/1X80YnEMOj9vPN_28tgP8Bxkka3P86Vx9/view?usp=sharing",
 };
