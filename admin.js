@@ -1,4 +1,4 @@
-console.log("js verze 28.1");
+console.log("js verze 28.2");
 /* procentuální sleva u akční ceny */
 if (location.href.includes("/admin/ceny/")) {
     document.querySelectorAll('input[name^="actionPrice["]').forEach((actionInput) => {
@@ -834,8 +834,8 @@ if (location.href.includes("/admin/pokladna/")) {
 /* END pokladna úprava END */
 /* zobrazení skladových zásob produktů */
 
-const csvUrl =
-    "https://www.artyrium.cz/export/products.csv?patternId=11&partnerId=14&hash=fb37ca04338a033910bb58806735dfd92f8abe968e8d7c8f83c3bbc2ed58f6b2&stockState=4";
+const csvUrl = "https://www.artyrium.cz/export/products.csv?patternId=11&partnerId=14&hash=fb37ca04338a033910bb58806735dfd92f8abe968e8d7c8f83c3bbc2ed58f6b2";
+    /*"https://www.artyrium.cz/export/products.csv?patternId=11&partnerId=14&hash=fb37ca04338a033910bb58806735dfd92f8abe968e8d7c8f83c3bbc2ed58f6b2&stockState=4";*/
 // --- 1️⃣ Vytvoření tlačítka Produkty ---
 const numberLiProdukty = document.createElement("li");
 numberLiProdukty.className = "headerNavigation__link";
