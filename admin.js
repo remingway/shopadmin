@@ -1,4 +1,4 @@
-console.log("js verze 28.4");
+console.log("js verze 28.5");
 /* procentuální sleva u akční ceny */
 if (location.href.includes("/admin/ceny/")) {
     document.querySelectorAll('input[name^="actionPrice["]').forEach((actionInput) => {
@@ -1075,7 +1075,10 @@ async function zobrazProdukty() {
                     catDiv.appendChild(heading);
 
                     categories[cat]
-                        .sort((a, b) => a.value - b.value)
+                        .sort((a, b) => {
+                            if (cat === "Obaly") return 0;
+                            return a.value - b.value;
+                        })
                         .forEach((item) => {
                             const row = document.createElement("div");
                             row.className = "produkty-row";
