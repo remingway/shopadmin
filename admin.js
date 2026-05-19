@@ -1,4 +1,4 @@
-console.log("js verze 28.2");
+console.log("js verze 28.3");
 /* procentuální sleva u akční ceny */
 if (location.href.includes("/admin/ceny/")) {
     document.querySelectorAll('input[name^="actionPrice["]').forEach((actionInput) => {
@@ -946,6 +946,7 @@ async function zobrazProdukty() {
             const idxCategory = headers.indexOf("defaultCategory");
             const idxStock = headers.indexOf("stock");
             const idxStockMin = headers.indexOf("stockMinSupply");
+            const idxNegativeAmount = headers.indexOf("negativeAmount");
             const variantIndexes = headers.map((h, i) => (h.startsWith("variant:") ? i : -1)).filter((i) => i !== -1);
 
             for (let i = 1; i < rows.length; i++) {
@@ -954,6 +955,7 @@ async function zobrazProdukty() {
                 const colD = cols[idxCategory];
                 const colE = parseFloat(cols[idxStock]?.replace(",", "."));
                 const colF = parseFloat(cols[idxStockMin]?.replace(",", "."));
+                const isNegativeAmount = cols[idxNegativeAmount] === "1";
 
                 if (!isNaN(colF) && !isNaN(colE) && colF > colE) {
                     const parts = colD.split(">");
@@ -978,6 +980,7 @@ async function zobrazProdukty() {
                         name: displayName,
                         value: colE,
                         image: imageUrl,
+                        isNegative: isNegativeAmount
                     });
                 }
             }
@@ -1062,6 +1065,7 @@ async function zobrazProdukty() {
                                 "https://www.artyrium.cz/admin/vyhledavani/?string=" + encodeURIComponent(item.name);
                             link.textContent = `${item.name}: ${item.value}`;
                             link.target = "_blank";
+                            if (item.isNegative) {link.style.color = "#888";}
 
                             row.appendChild(link);
                             catDiv.appendChild(row);
