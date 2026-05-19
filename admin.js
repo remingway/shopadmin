@@ -1,4 +1,4 @@
-console.log("js verze 28.3");
+console.log("js verze 28.4");
 /* procentuální sleva u akční ceny */
 if (location.href.includes("/admin/ceny/")) {
     document.querySelectorAll('input[name^="actionPrice["]').forEach((actionInput) => {
@@ -835,7 +835,8 @@ if (location.href.includes("/admin/pokladna/")) {
 /* zobrazení skladových zásob produktů */
 
 const csvUrl = "https://www.artyrium.cz/export/products.csv?patternId=11&partnerId=14&hash=fb37ca04338a033910bb58806735dfd92f8abe968e8d7c8f83c3bbc2ed58f6b2";
-    /*"https://www.artyrium.cz/export/products.csv?patternId=11&partnerId=14&hash=fb37ca04338a033910bb58806735dfd92f8abe968e8d7c8f83c3bbc2ed58f6b2&stockState=4";*/
+const googleSheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOYwXz84zk8UYO1e_pqkyXQPpYLDIJ9b1V6BURnysGQNEuerZpCoFL8BvxySqMS2qgTmvIANF85AZx/pub?gid=1452505840&single=true&output=csv";
+
 // --- 1️⃣ Vytvoření tlačítka Produkty ---
 const numberLiProdukty = document.createElement("li");
 numberLiProdukty.className = "headerNavigation__link";
@@ -872,10 +873,50 @@ if (targetElementProKalendar) {
     targetElementProKalendar.parentNode.insertBefore(numberLiProdukty, targetElementProKalendar);
 }
 
-// --- 3️⃣ Funkce pro zobrazení overlay s produkty ---
-let produktyOverlayLoaded = false; // aby se data načetla jen jednou
+// --- 3️⃣ Pomocná funkce pro načtení obalů z Google Sheets ---
+async function nactiObalyzGoogleSheets() {
+    const obalyData = [];
+    const sledovaneNazvy = ["zápisník obal", "diář obal", "šanon obal", "krabice"];
 
-// Funkce pro zobrazení overlay s produkty (upravená část)
+    if (!googleSheetCsvUrl) {
+        console.warn("Není nastaven platný odkaz pro Google Sheets.");
+        return obalyData;
+    }
+
+    try {
+        const response = await fetch(googleSheetCsvUrl);
+        if (!response.ok) throw new Error("Google Sheets HTTP " + response.status);
+        const text = await response.text();
+        
+        // Zjištění oddělovače (čárka nebo středník)
+        const delimiter = text.includes(";") ? ";" : ",";
+        const rows = text.trim().split("\n").map(r => r.split(delimiter));
+
+        // Projdeme řádky a hledáme shodu v názvech
+        rows.forEach(row => {
+            if (row.length < 2) return;
+            const nazev = row[0].replace(/^"|"$/g, "").trim();
+            const hodnotaText = row[1].replace(/^"|"$/g, "").trim();
+
+            if (sledovaneNazvy.includes(nazev)) {
+                const hodnota = parseFloat(hodnotaText.replace(",", "."));
+                obalyData.push({
+                    name: nazev,
+                    value: isNaN(hodnota) ? 0 : hodnota,
+                    image: null,       // obaly nemají obrázek z e-shopu
+                    isNegative: false  // výchozí stav pro zbarvení textu
+                });
+            }
+        });
+    } catch (err) {
+        console.error("Chyba při načítání dat z Google Sheets:", err);
+    }
+    return obalyData;
+}
+
+// --- 4️⃣ Funkce pro zobrazení overlay s produkty ---
+let produktyOverlayLoaded = false;
+
 async function zobrazProdukty() {
     let overlay = document.getElementById("produktyOverlay");
 
@@ -928,16 +969,23 @@ async function zobrazProdukty() {
         overlay.appendChild(outputDiv);
 
         try {
-            const response = await fetch(csvUrl);
-            if (!response.ok) throw new Error("HTTP " + response.status);
-            const text = await response.text();
+            // Paralelní načtení e-shop CSV a Google Sheets
+            const [responseEshop, dataObaly] = await Promise.all([
+                fetch(csvUrl),
+                nactiObalyzGoogleSheets()
+            ]);
+
+            if (!responseEshop.ok) throw new Error("HTTP " + responseEshop.status);
+            const text = await responseEshop.text();
             const delimiter = text.includes(";") ? ";" : ",";
-            const rows = text
-                .trim()
-                .split("\n")
-                .map((r) => r.split(delimiter));
+            const rows = text.trim().split("\n").map((r) => r.split(delimiter));
 
             const categories = {};
+
+            // Pokud se z Google Sheets vrátily nějaké obaly, založíme jim samostatnou kategorii
+            if (dataObaly.length > 0) {
+                categories["Obaly"] = dataObaly;
+            }
 
             const headers = rows[0].map((h) => h.replace(/^"|"$/g, "").trim());
 
@@ -971,7 +1019,6 @@ async function zobrazProdukty() {
                     if (!categories[categoryName]) categories[categoryName] = [];
                     let imageUrl = cols[idxImage];
 
-                    // úprava cesty obrázku
                     if (imageUrl && imageUrl.includes("/orig/")) {
                         imageUrl = imageUrl.replace("/orig/", "/detail/");
                     }
@@ -988,7 +1035,7 @@ async function zobrazProdukty() {
             const container = document.createElement("div");
             container.id = "produktyContainer";
             container.style.columnCount = "auto";
-            container.style.columnWidth = "260px"; // šířka sloupce
+            container.style.columnWidth = "260px";
             container.style.columnGap = "20px";
             overlay.appendChild(container);
 
@@ -1004,7 +1051,6 @@ async function zobrazProdukty() {
                 const columnHeights = new Array(columnCount).fill(0);
                 container.style.position = "relative";
 
-                // červené kategorie první
                 const sortedCategoryNames = Object.keys(categories).sort((a, b) => {
                     const ar = localStorage.getItem("cat_" + a) === "red";
                     const br = localStorage.getItem("cat_" + b) === "red";
@@ -1061,11 +1107,13 @@ async function zobrazProdukty() {
                             }
 
                             const link = document.createElement("a");
-                            link.href =
-                                "https://www.artyrium.cz/admin/vyhledavani/?string=" + encodeURIComponent(item.name);
+                            link.href = "https://www.artyrium.cz/admin/vyhledavani/?string=" + encodeURIComponent(item.name);
                             link.textContent = `${item.name}: ${item.value}`;
                             link.target = "_blank";
-                            if (item.isNegative) {link.style.color = "#888";}
+                            
+                            if (item.isNegative) {
+                                link.style.color = "#888";
+                            }
 
                             row.appendChild(link);
                             catDiv.appendChild(row);
@@ -1073,7 +1121,6 @@ async function zobrazProdukty() {
 
                     container.appendChild(catDiv);
 
-                    // masonry pozice
                     const col = columnHeights.indexOf(Math.min(...columnHeights));
                     const x = col * (columnWidth + gap);
                     const y = columnHeights[col];
@@ -1086,9 +1133,9 @@ async function zobrazProdukty() {
                 if (loading) loading.style.display = "none";
             }
 
-            renderCategories(); // první vykreslení
+            renderCategories();
         } catch (err) {
-            document.getElementById("produktyLoading").textContent = "Chyba při načítání CSV: " + err.message;
+            document.getElementById("produktyLoading").textContent = "Chyba při načítání dat: " + err.message;
             console.error(err);
         }
 
@@ -1098,14 +1145,12 @@ async function zobrazProdukty() {
     }
 }
 
-// --- 4️⃣ Kliknutí na tlačítko Produkty ---
+// --- 5️⃣ Kliknutí na tlačítko Produkty ---
 buttonProdukty.addEventListener("click", () => {
     const overlay = document.getElementById("produktyOverlay");
     if (overlay) {
-        // Pokud overlay existuje, toggle display
         overlay.style.display = overlay.style.display === "none" || overlay.style.display === "" ? "block" : "none";
     } else {
-        // Pokud overlay ještě neexistuje, vytvoříme jej
         zobrazProdukty();
     }
 });
