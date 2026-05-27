@@ -1344,7 +1344,7 @@ if (location.href.includes("/admin/objednavky-detail")) {
 
             console.log("Vypočtený IBAN:", iban);
 
-            var expectedIBAN = "CZ3020100000002102759244";
+            var expectedIBAN = "CZ2420100000002802963940";
 
             if (iban !== expectedIBAN) {
                 console.error("IBAN se neshoduje!");
