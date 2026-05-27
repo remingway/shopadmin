@@ -1,4 +1,4 @@
-console.log("js verze 28.5");
+console.log("js verze 29.0");
 /* procentuální sleva u akční ceny */
 if (location.href.includes("/admin/ceny/")) {
     document.querySelectorAll('input[name^="actionPrice["]').forEach((actionInput) => {
@@ -1395,3 +1395,138 @@ if (location.href.includes("/admin/objednavky-detail")) {
 }
 
 /* END neuhrazená dobírka generování QR kódů END */
+/* doplatek generování QR kódů */
+
+if (location.href.includes("/admin/objednavky-detail")) {
+    document.addEventListener("click", function (event) {
+        const link = event.target.closest('a[href*="/admin/zaslat-zakaznikovi-email/"]');
+
+        if (!link) return;
+
+        if (!link.textContent.includes("Doplatek objednávky")) return;
+
+        console.log("Kliknuto na email 'Doplatek objednávky'");
+
+        setTimeout(function () {
+            var iframe = document.getElementById("description_ifr");
+
+            if (!iframe) {
+                console.error("iframe nenalezen");
+                return;
+            }
+
+            var doc = iframe.contentDocument || iframe.contentWindow.document;
+
+            var paragraphs = doc.getElementsByTagName("p");
+
+            var accountRaw = null;
+            var vs = null;
+            var amountFromText = null;
+
+            for (var i = 0; i < paragraphs.length; i++) {
+                var p = paragraphs[i];
+
+                if (p.innerText.includes("Číslo účtu")) {
+                    console.log("Platební údaje nalezeny");
+
+                    var accMatch = p.innerText.match(/Číslo účtu:\s*([0-9\/\-]+)/);
+                    var vsMatch = p.innerText.match(/Variabilní symbol platby:\s*([0-9]+)/);
+                    var amountMatch = p.innerText.match(/Částka:\s*([0-9]+)/);
+
+                    if (accMatch) accountRaw = accMatch[1];
+                    if (vsMatch) vs = vsMatch[1];
+                    if (amountMatch) amountFromText = amountMatch[1];
+
+                    break;
+                }
+            }
+
+            if (!accountRaw || !vs) {
+                console.error("Účet nebo VS nenalezen");
+                return;
+            }
+
+            if (!amountFromText) {
+                console.error("Částka nenalezena");
+                return;
+            }
+
+            console.log("Účet:", accountRaw);
+            console.log("VS:", vs);
+            console.log("Částka z textu:", amountFromText);
+
+            // převod na IBAN
+            function accountToIBAN(account) {
+                let parts = account.split("/");
+                let accountNumber = parts[0];
+                let bankCode = parts[1];
+
+                let prefix = "";
+                let number = accountNumber;
+
+                if (accountNumber.includes("-")) {
+                    let split = accountNumber.split("-");
+                    prefix = split[0];
+                    number = split[1];
+                }
+
+                prefix = prefix.padStart(6, "0");
+                number = number.padStart(10, "0");
+
+                let bban = bankCode + prefix + number;
+
+                let country = "CZ";
+                let converted = bban + country + "00";
+
+                let numeric = converted.replace(/[A-Z]/g, function (char) {
+                    return char.charCodeAt(0) - 55;
+                });
+
+                let mod = BigInt(numeric) % 97n;
+
+                let check = (98n - mod).toString();
+
+                if (check.length === 1) check = "0" + check;
+
+                return country + check + bban;
+            }
+
+            var iban = accountToIBAN(accountRaw);
+
+            console.log("Vypočtený IBAN:", iban);
+
+            var expectedIBAN = "CZ2420100000002802963940";
+
+            if (iban !== expectedIBAN) {
+                console.error("IBAN se neshoduje!");
+                console.error("Očekávaný IBAN:", expectedIBAN);
+                console.error("Vypočtený IBAN:", iban);
+
+                return;
+            }
+
+            console.log("IBAN kontrola OK");
+
+            // QR generátor
+            function generateQR(amount) {
+                return "SPD*1.0*" + "ACC:" + iban + "*AM:" + amount + "*CC:CZK" + "*X-VS:" + vs + "*X-PER:7";
+            }
+
+            var qrURL1 =
+                "https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=" +
+                encodeURIComponent(generateQR(amountFromText));
+
+            var qrTarget1 = doc.getElementById("QRkod1");
+
+            if (!qrTarget1) {
+                console.error("QRkod1 nenalezen");
+            } else {
+                qrTarget1.innerHTML =
+                    '<img src="' + qrURL1 + '" style="padding:15px;background:white;width:105px;height:105px;">';
+                console.log("QR kód vložen");
+            }
+        }, 1000);
+    });
+}
+
+/* END doplatek generování QR kódů END */
