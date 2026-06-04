@@ -1,4 +1,4 @@
-console.log("js verze 29.2");
+console.log("js verze 29.4");
 /* procentuální sleva u akční ceny */
 if (location.href.includes("/admin/ceny/")) {
     document.querySelectorAll('input[name^="actionPrice["]').forEach((actionInput) => {
@@ -288,66 +288,23 @@ if (location.href.includes("/admin/prehled-objednavek/")) {
 /* END počet dnů u datumu END */
 /* přepínání tabování mezi sloupci a řádky - další tlačítko u "uložit" */
 
-/* přepínání tabování mezi sloupci a řádky - verze s diagnostikou */
+    setTimeout(() => {
+        initTabindexSwitcher();
+    }, 1000);
 
-/* přepínání tabování mezi sloupci a řádky - verze s asynchronním hlídáním (v2) */
-
-console.log("%c[Tabindex Script] Skript inicializován a spuštěn", "color: #14b1ef; font-weight: bold;");
-
-let tabindexEnabled = localStorage.getItem("tabindexEnabled") === "true";
-let observer = null;
-
-// Spustíme hlavní logiku
-initTabindexScript();
-
-function initTabindexScript() {
-    const tbodyExists = !!document.querySelector("tbody");
-    const buttonsExist = !!document.querySelector(".content-buttons");
-
-    // Pokud už na stránce všechno je (pro případ, že se skript spustil později)
-    if (tbodyExists && buttonsExist) {
-        console.log("%c[Tabindex Script] Všechny prvky nalezeny hned na začátku. Spouštím...", "color: green;");
-        runLogic();
-        return;
-    }
-
-    // Pokud něco chybí, začneme stránku bedlivě sledovat (asynchronní načítání)
-    console.log("[Tabindex Script] Prvky (tbody nebo .content-buttons) ještě nejsou v DOMu. Spouštím hlídání změn (MutationObserver)...");
-    
-    if (observer) observer.disconnect(); // pro jistotu vyčistíme starý observer
-
-    observer = new MutationObserver((mutations, obs) => {
-        const tbody = document.querySelector("tbody");
-        const buttons = document.querySelector(".content-buttons");
-
-        if (tbody && buttons) {
-            console.log("%c[Tabindex Script] Hlídání úspěšné! Detekováno dodatečné načtení tbody i tlačítek.", "color: green; font-weight: bold;");
-            obs.disconnect(); // Přestaneme hlídat, máme co jsme chtěli
-            runLogic();
-        }
-    });
-
-    // Sledujeme celou strukturu dokumentu
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-}
-
-function runLogic() {
-    console.log(`[Tabindex Script] Stav z localStorage (tabindexEnabled): ${tabindexEnabled}`);
-
+function initTabindexSwitcher() {
+    if (!document.querySelector("tbody")) return;
+    let tabindexEnabled = localStorage.getItem("tabindexEnabled") === "true";
     if (tabindexEnabled) {
         applyTabindex();
     } else {
         removeTabindex();
     }
-
     if (location.href.includes("/admin/produkty/")) {
         const toggleButtonElement = document.querySelector(".content-buttons");
         
-        // Pokud tlačítko už existuje, nebudeme ho vytvářet znovu
-        if (document.getElementById("toggleTabindex")) return;
+        // Pojistka: pokud tlačítko už existuje, nebudeme ho vytvářet znovu
+        if (!toggleButtonElement || document.getElementById("toggleTabindex")) return;
 
         const buttonSpan = document.createElement("span");
         const buttonA = document.createElement("a");
@@ -361,10 +318,8 @@ function runLogic() {
 
         buttonSpan.appendChild(buttonA);
         toggleButtonElement.insertBefore(buttonSpan, toggleButtonElement.firstChild);
-        console.log("[Tabindex Script] Přepínací tlačítko úspěšně vloženo do lišty.");
 
         buttonA.addEventListener("click", () => {
-            console.log("%c[Tabindex Script] Kliknuto na tlačítko přepínání", "color: #14b1ef; font-weight: bold;");
             if (tabindexEnabled) {
                 removeTabindex();
                 buttonA.style.backgroundColor = "#00000055";
@@ -379,35 +334,23 @@ function runLogic() {
 }
 
 function applyTabindex() {
-    console.log("%c[Tabindex Script] Spouštím funkci applyTabindex()...", "color: blue;");
-    const tbodies = document.querySelectorAll("tbody");
-    
-    tbodies.forEach((tbody, index) => {
+    document.querySelectorAll("tbody").forEach((tbody) => {
         const rows = Array.from(tbody.querySelectorAll("tr"));
         if (!rows.length) return;
 
-        // Cílíme na buňky Shoptetu v2 (třídy obsahující table__cell) s fallbackem na <td>
-        let cellsInFirstRow = rows[0].querySelectorAll('[class*="table__cell"]');
-        if (cellsInFirstRow.length === 0) cellsInFirstRow = rows[0].querySelectorAll("td");
-        
-        const colsCount = cellsInFirstRow.length;
+        const colsCount = rows[0].querySelectorAll("td").length;
         let tabIndex = 1;
-        
-        // Ignorujeme disabled inputy, skryté inputy a pomocné texty z Shoptet v2
-        const validSelector = "input:not([disabled]):not([type='hidden']), select:not([disabled]), a:not([disabled])";
 
         for (let col = 0; col < colsCount; col++) {
-            const cells = rows.map((row) => {
-                let rowCells = row.querySelectorAll('[class*="table__cell"]');
-                if (rowCells.length === 0) rowCells = row.querySelectorAll("td");
-                return rowCells[col];
-            }).filter(Boolean);
+            const cells = rows.map((row) => row.querySelectorAll("td")[col]).filter(Boolean);
 
-            const maxInputs = Math.max(...cells.map((cell) => cell.querySelectorAll(validSelector).length));
+            // zjistíme maximální počet inputů v buňkách sloupce
+            const maxInputs = Math.max(...cells.map((cell) => cell.querySelectorAll("input, select, a").length));
 
+            // PRVNÍ inputy, DRUHÉ inputy, TŘETÍ inputy...
             for (let inputIndex = 0; inputIndex < maxInputs; inputIndex++) {
                 cells.forEach((cell) => {
-                    const inputs = cell.querySelectorAll(validSelector);
+                    const inputs = cell.querySelectorAll("input, select, a");
                     const input = inputs[inputIndex];
                     if (!input) return;
 
@@ -415,23 +358,17 @@ function applyTabindex() {
                 });
             }
         }
-        console.log(`%c[Tabindex Script] Indexace dokončena. Naposledy přiřazený tabindex: ${tabIndex - 1}`, "color: green;");
     });
 }
 
 function removeTabindex() {
-    console.log("%c[Tabindex Script] Spouštím funkci removeTabindex()...", "color: blue;");
-    let removedCount = 0;
     document.querySelectorAll("tbody").forEach((tbody) => {
         tbody.querySelectorAll("input, select, a").forEach((input) => {
-            if (input.hasAttribute("tabindex")) {
-                input.removeAttribute("tabindex");
-                removedCount++;
-            }
+            input.removeAttribute("tabindex");
         });
     });
-    console.log(`[Tabindex Script] Odstraněn tabindex z ${removedCount} prvků.`);
 }
+
 
 /* END přepínání tabování mezi sloupci a řádky - další tlačítko u "uložit" END */
 /* zvýraznění přehazování objednávek do odesláno */
