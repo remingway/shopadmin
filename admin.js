@@ -330,19 +330,22 @@ function applyTabindex() {
         const rows = Array.from(tbody.querySelectorAll("tr"));
         if (!rows.length) return;
 
-        const colsCount = rows[0].querySelectorAll("td").length;
+        // Cílíme na jakoukoliv buňku, která začíná třídou table__cell
+        const colsCount = rows[0].querySelectorAll('[class*="table__cell"]').length;
         let tabIndex = 1;
 
         for (let col = 0; col < colsCount; col++) {
-            const cells = rows.map((row) => row.querySelectorAll("td")[col]).filter(Boolean);
+            const cells = rows.map((row) => row.querySelectorAll('[class*="table__cell"]')[col]).filter(Boolean);
 
-            // zjistíme maximální počet inputů v buňkách sloupce
-            const maxInputs = Math.max(...cells.map((cell) => cell.querySelectorAll("input, select, a").length));
+            // Selektor upravíme tak, aby bral pouze VIDITELNÉ a POVOLENÉ inputy/selecty/odkazy
+            const validSelector = "input:not([disabled]):not([type='hidden']), select:not([disabled]), a:not([disabled])";
 
-            // PRVNÍ inputy, DRUHÉ inputy, TŘETÍ inputy...
+            // Zjistíme maximální počet validních inputů v buňkách sloupce
+            const maxInputs = Math.max(...cells.map((cell) => cell.querySelectorAll(validSelector).length));
+
             for (let inputIndex = 0; inputIndex < maxInputs; inputIndex++) {
                 cells.forEach((cell) => {
-                    const inputs = cell.querySelectorAll("input, select, a");
+                    const inputs = cell.querySelectorAll(validSelector);
                     const input = inputs[inputIndex];
                     if (!input) return;
 
