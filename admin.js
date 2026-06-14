@@ -1,4 +1,4 @@
-console.log("js verze 30.0.1");
+console.log("js verze 30.1.0");
 /* procentuální sleva u akční ceny */
 
 const injectPercentageInput = () => {
@@ -29,13 +29,12 @@ const injectPercentageInput = () => {
                 percentInput.value = "";
                 return;
             }
-            percentInput.value = Math.floor(100 - (act / std) * 100) + "%";
+            const res = Math.floor(100 - (act / std) * 100);
+            percentInput.value = res + "%";
         };
 
         const updateActionPrice = () => {
             const rawValue = percentInput.value.trim();
-            
-            // Pokud je pole procent prázdné, vymaž akční cenu
             if (rawValue === "" || rawValue === "%") {
                 actionInput.value = "";
                 return;
@@ -47,9 +46,16 @@ const injectPercentageInput = () => {
             if (isNaN(disc) || !std) return;
             
             const newActionPrice = Math.floor(std * (1 - disc / 100));
-            actionInput.value = newActionPrice;
-			actionInput.dispatchEvent(new Event('input', { bubbles: true }));
-			actionInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+            // 1. Nastavení hodnoty přes nativní setter prototypu (obchází překrytí)
+            const nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+            nativeSetter.call(actionInput, newActionPrice);
+            
+            // 2. Vyvolání událostí pro frameworky
+            ['input', 'change', 'blur'].forEach(evt => {
+                actionInput.dispatchEvent(new Event(evt, { bubbles: true }));
+            });
+
             updatePercent();
         };
 
@@ -58,21 +64,28 @@ const injectPercentageInput = () => {
         standardInput.addEventListener("blur", updatePercent);
         percentInput.addEventListener("blur", updateActionPrice);
         
-        // Podpora pro klávesu Enter v percentInputu
         percentInput.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") updateActionPrice();
+            if (e.key === "Enter") {
+                e.preventDefault();
+                updateActionPrice();
+            }
         });
 
         updatePercent();
         actionInput.dataset.hasPercentInput = "true";
-        actionInput.closest(".v2FormField__input").parentElement.appendChild(percentInput);
+        
+        // Vložení vedle původního inputu
+        const container = actionInput.closest(".v2FormField__input");
+        if(container) container.appendChild(percentInput);
     });
 };
+
 const observer = new MutationObserver(() => {
     injectPercentageInput();
 });
 observer.observe(document.body, { childList: true, subtree: true });
 injectPercentageInput();
+
 
 /* END procentuální sleva u akční ceny END */
 /* vždy zobrazit přehled u objednávek a produktů */
