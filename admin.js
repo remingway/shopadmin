@@ -1,4 +1,4 @@
-console.log("js verze 29.6");
+console.log("js verze 30.0.0");
 /* procentuální sleva u akční ceny */
 
 const injectPercentageInput = () => {
@@ -303,47 +303,56 @@ if (location.href.includes("/admin/prehled-objednavek/")) {
 
     setTimeout(() => {
         initTabindexSwitcher();
-    }, 1000);
+    }, 2000);
 
 function initTabindexSwitcher() {
     if (!document.querySelector("tbody")) return;
+    
     let tabindexEnabled = localStorage.getItem("tabindexEnabled") === "true";
-    if (tabindexEnabled) {
-        applyTabindex();
-    } else {
-        removeTabindex();
+    
+    // Nastavení stavu při startu
+    if (tabindexEnabled) applyTabindex();
+    else removeTabindex();
+
+    // Seznam selektorů pro obě místa, kam chceme tlačítko vložit
+    const containers = [
+        ".content-buttons",           // Původní místo
+        ".section__controlsHeader"    // Nové místo
+    ];
+
+    let targetContainer = null;
+    for (let selector of containers) {
+        targetContainer = document.querySelector(selector);
+        if (targetContainer) break; // Pokud našel první platný, použijeme ho
     }
-    if (location.href.includes("/admin/produkty/")) {
-        const toggleButtonElement = document.querySelector(".content-buttons");
+
+    // Pokud jsme nic nenašli nebo už tlačítko existuje, končíme
+    if (!targetContainer || document.getElementById("toggleTabindex")) return;
+
+    const buttonA = document.createElement("a");
+    buttonA.id = "toggleTabindex";
+    buttonA.className = "btn btn-sm btn-primary"; // Styl tlačítka
+    buttonA.textContent = "column tab";
+    buttonA.title = "tabování po sloupcích";
+    buttonA.style.marginRight = "10px"; // Mezera od tlačítka Uložit
+    buttonA.style.backgroundColor = tabindexEnabled ? "#14b1ef" : "#00000055";
+    buttonA.style.cursor = "pointer";
+
+    // Vložení na začátek kontejneru (vlevo od ostatních prvků)
+    targetContainer.insertBefore(buttonA, targetContainer.firstChild);
+
+    buttonA.addEventListener("click", () => {
+        tabindexEnabled = !tabindexEnabled;
+        localStorage.setItem("tabindexEnabled", tabindexEnabled);
         
-        // Pojistka: pokud tlačítko už existuje, nebudeme ho vytvářet znovu
-        if (!toggleButtonElement || document.getElementById("toggleTabindex")) return;
+        buttonA.style.backgroundColor = tabindexEnabled ? "#14b1ef" : "#00000055";
 
-        const buttonSpan = document.createElement("span");
-        const buttonA = document.createElement("a");
-        buttonA.id = "toggleTabindex";
-        buttonA.className = "btn btn-sm btn-primary";
-        buttonA.textContent = "column tab";
-        buttonA.title = "tabování po sloupcích";
-
-        if (tabindexEnabled) buttonA.style.backgroundColor = "#14b1ef";
-        else buttonA.style.backgroundColor = "#00000055";
-
-        buttonSpan.appendChild(buttonA);
-        toggleButtonElement.insertBefore(buttonSpan, toggleButtonElement.firstChild);
-
-        buttonA.addEventListener("click", () => {
-            if (tabindexEnabled) {
-                removeTabindex();
-                buttonA.style.backgroundColor = "#00000055";
-            } else {
-                applyTabindex();
-                buttonA.style.backgroundColor = "#14b1ef";
-            }
-            tabindexEnabled = !tabindexEnabled;
-            localStorage.setItem("tabindexEnabled", tabindexEnabled);
-        });
-    }
+        if (tabindexEnabled) {
+            applyTabindex();
+        } else {
+            removeTabindex();
+        }
+    });
 }
 
 function applyTabindex() {
@@ -381,6 +390,83 @@ function removeTabindex() {
         });
     });
 }
+
+(function() {
+    const selector = "span[role='spinbutton']";
+
+    document.addEventListener('keydown', function(e) {
+				if (localStorage.getItem("tabindexEnabled") !== "true" || e.key !== 'Tab') return;
+
+        const target = e.target;
+        const tbody = target.closest('tbody');
+        if (!tbody) return;
+
+        const currentRow = target.closest('tr');
+        const allRows = Array.from(tbody.querySelectorAll('tr'));
+        const rowIndex = allRows.indexOf(currentRow);
+        const cell = target.closest('td');
+        const allCellsInRow = Array.from(currentRow.querySelectorAll('td'));
+        const colIndex = allCellsInRow.indexOf(cell);
+
+        let nextRowIndex, nextColIndex;
+
+        if (e.shiftKey) {
+            // LOGIKA PRO SHIFT + TAB (zpět)
+            nextRowIndex = rowIndex - 1;
+            nextColIndex = colIndex;
+
+            if (nextRowIndex < 0) {
+                nextRowIndex = allRows.length - 1;
+                nextColIndex = colIndex - 1;
+            }
+        } else {
+            // LOGIKA PRO TAB (vpřed)
+            nextRowIndex = rowIndex + 1;
+            nextColIndex = colIndex;
+
+            if (nextRowIndex >= allRows.length) {
+                nextRowIndex = 0;
+                nextColIndex = colIndex + 1;
+            }
+        }
+
+        // Validace indexů a posun fokusu
+        if (nextColIndex >= 0 && nextColIndex < allCellsInRow.length) {
+            const nextRow = allRows[nextRowIndex];
+            const nextCell = nextRow.querySelectorAll('td')[nextColIndex];
+            
+            if (nextCell) {
+                const nextFocusable = nextCell.querySelectorAll(selector);
+                if (nextFocusable.length > 0) {
+                    e.preventDefault();
+                    // Pokud jdeme zpět (Shift+Tab), fokusujeme poslední prvek v buňce
+                    const indexToFocus = e.shiftKey ? nextFocusable.length - 1 : 0;
+                    nextFocusable[indexToFocus].focus();
+                }
+                // ... v rámci bloku if (nextCell) { ...
+
+if (nextFocusable.length > 0) {
+    e.preventDefault();
+    const elementToFocus = nextFocusable[0];
+    elementToFocus.focus();
+
+    setTimeout(() => {
+        // Simulace Ctrl+A pro označení všeho uvnitř elementu
+        const ctrlA = new KeyboardEvent('keydown', {
+            key: 'a',
+            code: 'KeyA',
+            ctrlKey: true,
+            metaKey: true, // pro Mac uživatele
+            bubbles: true,
+            cancelable: true
+        });
+        elementToFocus.dispatchEvent(ctrlA);
+    }, 50); // Mírné prodloužení pro jistotu, že focus proběhl
+}
+            }
+        }
+    });
+})();
 
 
 /* END přepínání tabování mezi sloupci a řádky - další tlačítko u "uložit" END */
