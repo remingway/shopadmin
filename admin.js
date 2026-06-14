@@ -1,63 +1,76 @@
-console.log("js verze 29.4");
+console.log("js verze 29.5");
 /* procentuální sleva u akční ceny */
-if (location.href.includes("/admin/ceny/")) {
-    document.querySelectorAll('input[name^="actionPrice["]').forEach((actionInput) => {
+
+const injectPercentageInput = () => {
+    const actionPriceInputs = document.querySelectorAll('input[name^="actionPrice."]');
+    
+    actionPriceInputs.forEach((actionInput) => {
+        if (actionInput.dataset.hasPercentInput) return;
+        
         const row = actionInput.closest("tr");
         if (!row) return;
-        const match = actionInput.name.match(/\[(\d+)\]/);
-        if (!match) return;
-        const id = match[1];
-        const standardInput = row.querySelector(`input[name="standardPrice[${id}]"]`);
+
+        const id = actionInput.name.split('.')[1];
+        const standardInput = row.querySelector(`input[name="standardPrice.${id}"]`);
         if (!standardInput) return;
 
-        // --- Vytvoření inputu pro SLEVU ---
         const percentInput = document.createElement("input");
         percentInput.type = "text";
         percentInput.className = "numberField xs";
         percentInput.style.marginLeft = "6px";
-        percentInput.style.background = "#fff3a3"; // žluté pozadí
-        percentInput.placeholder = "% sleva";
+        percentInput.style.background = "#fff3a3";
+        percentInput.placeholder = "%";
 
-        // --- Funkce: spočítat SLEVU podle ceny ---
         const updatePercent = () => {
-            const actionPrice = parseFloat(actionInput.value);
-            const standardPrice = parseFloat(standardInput.value);
-
-            if (!standardPrice || isNaN(actionPrice)) {
+            const act = parseFloat(actionInput.value.replace(',', '.'));
+            const std = parseFloat(standardInput.value.replace(',', '.'));
+            
+            if (!std || isNaN(act)) {
                 percentInput.value = "";
                 return;
             }
-
-            const discount = 100 - (actionPrice / standardPrice) * 100;
-            percentInput.value = Math.floor(discount) + "%";
+            percentInput.value = Math.floor(100 - (act / std) * 100) + "%";
         };
 
-        // --- Funkce: spočítat ACTION PRICE podle zadané slevy ---
         const updateActionPrice = () => {
-            let raw = percentInput.value.replace("%", "").trim();
-            const discount = parseFloat(raw);
+            const rawValue = percentInput.value.trim();
+            
+            // Pokud je pole procent prázdné, vymaž akční cenu
+            if (rawValue === "" || rawValue === "%") {
+                actionInput.value = "";
+                return;
+            }
 
-            const standardPrice = parseFloat(standardInput.value);
-            if (isNaN(discount) || !standardPrice) return;
-
-            const newActionPrice = Math.floor(standardPrice * (1 - discount / 100));
+            const disc = parseFloat(rawValue.replace("%", ""));
+            const std = parseFloat(standardInput.value.replace(',', '.'));
+            
+            if (isNaN(disc) || !std) return;
+            
+            const newActionPrice = Math.floor(std * (1 - disc / 100));
             actionInput.value = newActionPrice;
-
             updatePercent();
         };
 
-        // První výpočet
-        updatePercent();
-
-        // Live přepočty
+        // Eventy
         actionInput.addEventListener("blur", updatePercent);
         standardInput.addEventListener("blur", updatePercent);
         percentInput.addEventListener("blur", updateActionPrice);
+        
+        // Podpora pro klávesu Enter v percentInputu
+        percentInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") updateActionPrice();
+        });
 
-        // Umístíme do stránky
-        actionInput.parentElement.appendChild(percentInput);
+        updatePercent();
+        actionInput.dataset.hasPercentInput = "true";
+        actionInput.closest(".v2FormField__input").parentElement.appendChild(percentInput);
     });
-}
+};
+const observer = new MutationObserver(() => {
+    injectPercentageInput();
+});
+observer.observe(document.body, { childList: true, subtree: true });
+injectPercentageInput();
 
 /* END procentuální sleva u akční ceny END */
 /* vždy zobrazit přehled u objednávek a produktů */
