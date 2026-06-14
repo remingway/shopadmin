@@ -1,4 +1,4 @@
-console.log("js verze 30.0.0");
+console.log("js verze 30.0.1");
 /* procentuální sleva u akční ceny */
 
 const injectPercentageInput = () => {
