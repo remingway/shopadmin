@@ -1,4 +1,4 @@
-console.log("js verze 29.5");
+console.log("js verze 29.6");
 /* procentuální sleva u akční ceny */
 
 const injectPercentageInput = () => {
@@ -821,7 +821,7 @@ buttonKalendar.addEventListener("click", loadCalendar);
 
 /* END vytvořit kalendář END */
 
-/* pokladna úprava */
+/* pokladna úprava
 
 function updateImageSrc() {
     var imgElements = document.querySelectorAll("img");
@@ -853,7 +853,7 @@ if (location.href.includes("/admin/pokladna/")) {
     }
 }
 
-/* END pokladna úprava END */
+ END pokladna úprava END */
 /* zobrazení skladových zásob produktů */
 
 const csvUrl = "https://www.artyrium.cz/export/products.csv?patternId=11&partnerId=14&hash=fb37ca04338a033910bb58806735dfd92f8abe968e8d7c8f83c3bbc2ed58f6b2";
