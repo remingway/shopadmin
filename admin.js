@@ -48,6 +48,8 @@ const injectPercentageInput = () => {
             
             const newActionPrice = Math.floor(std * (1 - disc / 100));
             actionInput.value = newActionPrice;
+			actionInput.dispatchEvent(new Event('input', { bubbles: true }));
+			actionInput.dispatchEvent(new Event('change', { bubbles: true }));
             updatePercent();
         };
 
