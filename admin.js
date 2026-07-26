@@ -276,7 +276,7 @@ if (location.href.includes("/admin/prehled-objednavek/")) {
                         var divSelectElement = document.querySelectorAll("td div.v2FormField__select");
                         var selectElement = divSelectElement[index].querySelector("select");
                         if (selectElement && selectElement.value != "-2") selectElement.value = "39";
-                        if (selectElement) selectElement.style.backgroundColor = "#55995555";
+                        if (selectElement && selectElement.value != "-2") selectElement.style.backgroundColor = "#55995555";
 
                         /* END přesunout dlouho nezaplacené objednávky do "Stále nezaplacené" END */
                         /* END nevyřízeno END */
