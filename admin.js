@@ -1,4 +1,4 @@
-console.log("js verze 31.1.0");
+console.log("js verze 31.2.0");
 /* procentuální sleva u akční ceny */
 
 const injectPercentageInput = () => {
@@ -1680,30 +1680,15 @@ adminNotifButton.style.border = "none";
 adminNotifButton.style.color = "black";
 
 adminNotifButton.addEventListener("click", () => {
-    let userId = "";
-    const userElement = document.querySelector(
-        ".headerNavigation__link--user span span, .headerNavigation__userName + span"
-    );
+    let firstName = "";
+    const userElement = document.querySelector(".headerNavigation__userName");
 
     if (userElement) {
-        const match = userElement.textContent.match(/ID:\s*(\d+)/);
-        if (match) {
-            userId = match[1];
-        }
+        const fullName = userElement.textContent.trim();
+        firstName = fullName.split(" ")[0];
     }
 
-    if (!userId) {
-        const allSpans = document.querySelectorAll(".headerNavigation__link--user span");
-        for (const span of allSpans) {
-            const match = span.textContent.match(/ID:\s*(\d+)/);
-            if (match) {
-                userId = match[1];
-                break;
-            }
-        }
-    }
-
-    window.location.href = `https://admin.artyrium.cz/?user=${userId}`;
+    window.location.href = `https://admin.artyrium.cz/?user=${encodeURIComponent(firstName)}`;
 });
 
 adminNotifLi.appendChild(adminNotifButton);
