@@ -1,4 +1,4 @@
-console.log("js verze 31.0.0");
+console.log("js verze 31.1.0");
 /* procentuální sleva u akční ceny */
 
 const injectPercentageInput = () => {
@@ -1653,37 +1653,33 @@ if (location.href.includes("/admin/objednavky-detail")) {
 }
 
 /* END doplatek generování QR kódů END */
-/* tlačítko notifikace */
-const numberLiKalendar = document.createElement("li");
-numberLiKalendar.className = "headerNavigation__link";
+/* tlačítko pro admin notifikace */
+
+const adminNotifLi = document.createElement("li");
+adminNotifLi.className = "headerNavigation__link";
 if (window.innerWidth < 500) {
-    numberLiKalendar.style.padding = "0 5px";
+    adminNotifLi.style.padding = "0 5px";
 } else {
-    numberLiKalendar.style.padding = "0 12px";
+    adminNotifLi.style.padding = "0 12px";
 }
 
-const buttonKalendar = document.createElement("button");
-buttonKalendar.innerHTML = `
-
+const adminNotifButton = document.createElement("button");
+adminNotifButton.innerHTML = `
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-
         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-
         <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-
     </svg>
-
 `;
-buttonKalendar.setAttribute("aria-label", "Kalendář");
+adminNotifButton.setAttribute("aria-label", "Admin notifikace");
 
-buttonKalendar.style.display = "block";
-buttonKalendar.style.zIndex = "10000";
-buttonKalendar.style.cursor = "pointer";
-buttonKalendar.style.background = "none";
-buttonKalendar.style.border = "none";
-buttonKalendar.style.color = "black";
+adminNotifButton.style.display = "block";
+adminNotifButton.style.zIndex = "10000";
+adminNotifButton.style.cursor = "pointer";
+adminNotifButton.style.background = "none";
+adminNotifButton.style.border = "none";
+adminNotifButton.style.color = "black";
 
-buttonKalendar.addEventListener("click", () => {
+adminNotifButton.addEventListener("click", () => {
     let userId = "";
     const userElement = document.querySelector(
         ".headerNavigation__link--user span span, .headerNavigation__userName + span"
@@ -1710,10 +1706,11 @@ buttonKalendar.addEventListener("click", () => {
     window.location.href = `https://admin.artyrium.cz/?user=${userId}`;
 });
 
-numberLiKalendar.appendChild(buttonKalendar);
+adminNotifLi.appendChild(adminNotifButton);
 
-const targetElementProKalendar = document.querySelector(".headerNavigation__item.headerNavigation__item--university");
-if (targetElementProKalendar) {
-    targetElementProKalendar.parentNode.insertBefore(numberLiKalendar, targetElementProKalendar);
+const adminNotifTargetElement = document.querySelector(".headerNavigation__item.headerNavigation__item--university");
+if (adminNotifTargetElement) {
+    adminNotifTargetElement.parentNode.insertBefore(adminNotifLi, adminNotifTargetElement);
 }
-/* END tlačítko notifikace END */
+
+/* END tlačítko pro admin notifikace END */
