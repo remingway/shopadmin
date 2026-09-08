@@ -1,4 +1,4 @@
-console.log("js verze 30.2.0");
+console.log("js verze 31.0.0");
 /* procentuální sleva u akční ceny */
 
 const injectPercentageInput = () => {
@@ -1653,3 +1653,67 @@ if (location.href.includes("/admin/objednavky-detail")) {
 }
 
 /* END doplatek generování QR kódů END */
+/* tlačítko notifikace */
+const numberLiKalendar = document.createElement("li");
+numberLiKalendar.className = "headerNavigation__link";
+if (window.innerWidth < 500) {
+    numberLiKalendar.style.padding = "0 5px";
+} else {
+    numberLiKalendar.style.padding = "0 12px";
+}
+
+const buttonKalendar = document.createElement("button");
+buttonKalendar.innerHTML = `
+
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+
+    </svg>
+
+`;
+buttonKalendar.setAttribute("aria-label", "Kalendář");
+
+buttonKalendar.style.display = "block";
+buttonKalendar.style.zIndex = "10000";
+buttonKalendar.style.cursor = "pointer";
+buttonKalendar.style.background = "none";
+buttonKalendar.style.border = "none";
+buttonKalendar.style.color = "black";
+
+buttonKalendar.addEventListener("click", () => {
+    let userId = "";
+    const userElement = document.querySelector(
+        ".headerNavigation__link--user span span, .headerNavigation__userName + span"
+    );
+
+    if (userElement) {
+        const match = userElement.textContent.match(/ID:\s*(\d+)/);
+        if (match) {
+            userId = match[1];
+        }
+    }
+
+    if (!userId) {
+        const allSpans = document.querySelectorAll(".headerNavigation__link--user span");
+        for (const span of allSpans) {
+            const match = span.textContent.match(/ID:\s*(\d+)/);
+            if (match) {
+                userId = match[1];
+                break;
+            }
+        }
+    }
+
+    window.location.href = `https://admin.artyrium.cz/?user=${userId}`;
+});
+
+numberLiKalendar.appendChild(buttonKalendar);
+
+const targetElementProKalendar = document.querySelector(".headerNavigation__item.headerNavigation__item--university");
+if (targetElementProKalendar) {
+    targetElementProKalendar.parentNode.insertBefore(numberLiKalendar, targetElementProKalendar);
+}
+/* END tlačítko notifikace END */
