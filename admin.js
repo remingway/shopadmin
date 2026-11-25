@@ -1,4 +1,4 @@
-console.log("js verze 32.0.0");
+console.log("js verze 31.2.0");
 /* procentuální sleva u akční ceny */
 
 const injectPercentageInput = () => {
@@ -410,7 +410,7 @@ function removeTabindex() {
     const selector = "span[role='spinbutton']";
 
     document.addEventListener('keydown', function(e) {
-				if (localStorage.getItem("tabindexEnabled") !== "true" || e.key !== 'Tab') return;
+                if (localStorage.getItem("tabindexEnabled") !== "true" || e.key !== 'Tab') return;
 
         const target = e.target;
         const tbody = target.closest('tbody');
@@ -695,6 +695,233 @@ applyHeaderLinkPadding();
 window.addEventListener("resize", applyHeaderLinkPadding);
 
 /* END zobrazení icon pro mobil END */
+/* vytvořit kalendář */
+
+const numberLiKalendar = document.createElement("li");
+numberLiKalendar.className = "headerNavigation__link";
+if (window.innerWidth < 500) {
+    numberLiKalendar.style.padding = "0 5px";
+} else {
+    numberLiKalendar.style.padding = "0 12px";
+}
+const buttonKalendar = document.createElement("button");
+buttonKalendar.innerHTML = `
+  <svg xmlns="http://www.w3.org/2000/svg" 
+       width="20" height="20" viewBox="0 0 24 24" 
+       fill="none" stroke="currentColor" 
+       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+    <line x1="16" y1="2" x2="16" y2="6"></line>
+    <line x1="8" y1="2" x2="8" y2="6"></line>
+    <line x1="3" y1="10" x2="21" y2="10"></line>
+  </svg>
+`;
+buttonKalendar.setAttribute("aria-label", "Kalendář");
+
+buttonKalendar.style.display = "block";
+buttonKalendar.style.zIndex = "10000";
+buttonKalendar.style.cursor = "pointer";
+buttonKalendar.style.background = "none";
+buttonKalendar.style.border = "none";
+buttonKalendar.style.color = "white";
+numberLiKalendar.appendChild(buttonKalendar);
+
+const targetElementProKalendar = document.querySelector(".headerNavigation__item.headerNavigation__item--university");
+if (targetElementProKalendar) {
+    targetElementProKalendar.parentNode.insertBefore(numberLiKalendar, targetElementProKalendar);
+}
+// Funkce pro přidání obsahu kalendáře
+let calendarVisible = false; // Stav, zda je kalendář zobrazen
+
+function loadCalendar() {
+    const existingCalendar = document.getElementById("calendar-container");
+    if (existingCalendar) {
+        // Pokud kalendář již existuje, skryjeme ho
+        existingCalendar.style.display = calendarVisible ? "none" : "block";
+        calendarVisible = !calendarVisible;
+        return;
+    }
+
+    // Vytvoření kontejneru pro celý kalendář
+    const calendarContainer = document.createElement("div");
+    calendarContainer.id = "calendar-container";
+    calendarContainer.style.zIndex = "9999"; // Vertikální střed
+    calendarContainer.style.position = "absolute"; // Vertikální střed
+    calendarContainer.style.top = "50%"; // Vertikální střed
+    calendarContainer.style.left = "50%"; // Horizontální střed
+    calendarContainer.style.transform = "translate(-50%, -50%)";
+    calendarContainer.style.maxWidth = "800px"; // Maximální šířka kalendáře
+    calendarContainer.style.margin = "auto"; // Zarovnání na střed
+    calendarContainer.style.padding = "20px";
+    calendarContainer.style.border = "2px solid #ccc"; // Rámeček kolem kalendáře
+    calendarContainer.style.borderRadius = "10px"; // Zaoblení rohů
+    calendarContainer.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+    calendarContainer.style.textAlign = "center";
+    calendarContainer.style.backgroundColor = "white"; // Horizontální střed
+    document.body.appendChild(calendarContainer);
+
+    // Vytvoření hlavičky a stylování
+    const h1 = document.createElement("h1");
+    h1.id = "date";
+    calendarContainer.appendChild(h1);
+
+    // Vytvoření kontejneru pro události
+    const eventContainer = document.createElement("div");
+    eventContainer.id = "event-container";
+    calendarContainer.appendChild(eventContainer);
+
+    // Funkce pro převod formátu "DD.MM.YYYY" na Date v UTC bez hodin
+    function parseDate(dateStr) {
+        let parts = dateStr.trim().split(".");
+        if (parts.length === 3) {
+            let date = new Date(Date.UTC(parts[2], parts[1] - 1, parts[0]));
+            return date;
+        }
+        return null;
+    }
+
+    // Funkce pro výpočet počtu uplynulých dní a celkového počtu dní (bez času)
+    function getDaysProgress(startDate, endDate, currentDate) {
+        const totalDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
+        const elapsedDays = Math.floor((currentDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+        return {
+            progress: Math.min(elapsedDays / totalDays, 1),
+            totalDays: totalDays,
+            elapsedDays: elapsedDays,
+        };
+    }
+
+    // Dnešní datum
+    let today = new Date();
+    let formattedToday = today.toLocaleDateString("cs-CZ");
+    document.getElementById("date").textContent = formattedToday;
+
+    // Funkce pro výběr barvy progress baru podle typu akce
+    function getProgressBarColor(eventName) {
+        if (eventName.includes("Ilustrace")) {
+            return "#FF634755";
+        } else if (eventName.includes("Produkty příprava")) {
+            return "#1E90FF55";
+        } else if (eventName.includes("Reklama příprava")) {
+            return "#32CD3255";
+        } else {
+            return "#4CAF5055";
+        }
+    }
+
+    // Načítání dat z CSV
+    fetch(
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vQpcLfA-b_8s1xUDwu9SVElVqbgf0xPtYBDBz-w3XeAG29UavKuBUXyPVRY2jFgoGrXhWgtAbqPSBeT/pub?gid=1964521897&single=true&output=csv"
+    )
+        .then((response) => response.text())
+        .then((csv) => {
+            let rows = csv.split("\n");
+            let events = [];
+
+            for (let i = 4; i < 34 && i < rows.length; i++) {
+                let cols = rows[i].split(",").map((col) => col.trim());
+                if (cols.length >= 6) {
+                    let date1 = parseDate(cols[0]);
+                    let date2 = parseDate(cols[1]);
+                    let date3 = parseDate(cols[2]);
+                    let date4 = parseDate(cols[3]);
+                    let date5 = parseDate(cols[4]);
+                    let eventName = cols[5];
+
+                    if (date1 && date2 && date3 && date4 && date5) {
+                        let eventProgress;
+                        if (date1 <= today && today < date2) {
+                            eventProgress = getDaysProgress(date1, date2, today);
+                            events.push({ name: `Ilustrace - ${eventName}`, progress: eventProgress });
+                        } else if (date2 <= today && today < date3) {
+                            eventProgress = getDaysProgress(date2, date3, today);
+                            events.push({ name: `Produkty příprava - ${eventName}`, progress: eventProgress });
+                        } else if (date3 <= today && today < date4) {
+                            eventProgress = getDaysProgress(date3, date4, today);
+                            events.push({ name: `Reklama příprava - ${eventName}`, progress: eventProgress });
+                        } else if (today === date5) {
+                            eventProgress = getDaysProgress(date5, date5, today);
+                            events.push({ name: `${eventName}`, progress: eventProgress });
+                        }
+                    }
+                }
+            }
+
+            // Zobrazování akcí
+            if (events.length > 0) {
+                events.forEach((event) => {
+                    let eventDiv = document.createElement("div");
+                    eventDiv.classList.add("event");
+                    eventDiv.style.backgroundColor = "#f0f0f0";
+                    eventDiv.style.border = "1px solid #ccc";
+                    //eventDiv.style.margin = "auto";
+                    eventDiv.style.padding = "10px";
+                    eventDiv.style.width = "80%";
+                    eventDiv.style.margin = "5px auto 5px auto";
+                    eventDiv.style.textAlign = "left";
+                    eventDiv.style.borderRadius = "5px";
+                    eventDiv.style.display = "flex";
+                    eventDiv.style.flexDirection = "column";
+
+                    let eventHeaderDiv = document.createElement("div");
+                    eventHeaderDiv.classList.add("event-header");
+                    eventHeaderDiv.style.display = "flex";
+                    eventHeaderDiv.style.justifyContent = "space-between";
+                    eventHeaderDiv.style.alignItems = "center";
+
+                    let eventNameDiv = document.createElement("div");
+                    eventNameDiv.classList.add("event-name");
+                    eventNameDiv.textContent = event.name;
+                    eventNameDiv.style.textAlign = "left";
+                    eventNameDiv.style.flexGrow = "1";
+
+                    let eventProgressDiv = document.createElement("div");
+                    eventProgressDiv.classList.add("event-progress");
+                    eventProgressDiv.textContent = `${event.progress.elapsedDays}/${event.progress.totalDays}`;
+                    eventProgressDiv.style.textAlign = "right";
+                    eventProgressDiv.style.marginLeft = "20px";
+
+                    eventHeaderDiv.appendChild(eventNameDiv);
+                    eventHeaderDiv.appendChild(eventProgressDiv);
+
+                    let progressBar = document.createElement("div");
+                    progressBar.classList.add("progress-bar");
+                    progressBar.style.height = "8px";
+                    progressBar.style.backgroundColor = getProgressBarColor(event.name);
+                    progressBar.style.borderRadius = "5px";
+                    progressBar.style.width = event.progress.progress * 100 + "%";
+                    progressBar.style.marginTop = "5px";
+
+                    eventDiv.appendChild(eventHeaderDiv);
+                    eventDiv.appendChild(progressBar);
+
+                    eventContainer.appendChild(eventDiv);
+                });
+            } else {
+                let noEventDiv = document.createElement("div");
+                noEventDiv.classList.add("event");
+                noEventDiv.textContent = "Dnes žádná akce";
+                eventContainer.appendChild(noEventDiv);
+            }
+        })
+        .catch((error) => {
+            console.error("Chyba při načítání dat:", error);
+            let eventContainer = document.getElementById("event-container");
+            eventContainer.innerHTML = "";
+            let errorDiv = document.createElement("div");
+            errorDiv.classList.add("event");
+            errorDiv.textContent = "Chyba při načítání";
+            eventContainer.appendChild(errorDiv);
+        });
+
+    calendarVisible = true; // Kalendář je nyní zobrazen
+}
+
+// Akce pro tlačítko, které načte/skryje kalendář
+buttonKalendar.addEventListener("click", loadCalendar);
+
+/* END vytvořit kalendář END */
+
 /* pokladna úprava
 
 function updateImageSrc() {
@@ -763,6 +990,11 @@ buttonProdukty.style.border = "none";
 buttonProdukty.style.color = "white";
 
 numberLiProdukty.appendChild(buttonProdukty);
+
+// --- 2️⃣ Vložení tlačítka vedle Kalendáře ---
+if (targetElementProKalendar) {
+    targetElementProKalendar.parentNode.insertBefore(numberLiProdukty, targetElementProKalendar);
+}*/
 
 // --- 3️⃣ Pomocná funkce pro načtení obalů z Google Sheets ---
 async function nactiObalyzGoogleSheets() {
