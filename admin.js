@@ -1,4 +1,4 @@
-console.log("js verze 31.3.0");
+console.log("js verze 31.5.0");
 /* procentuální sleva u akční ceny */
 
 const injectPercentageInput = () => {
@@ -994,7 +994,7 @@ numberLiProdukty.appendChild(buttonProdukty);
 // --- 2️⃣ Vložení tlačítka vedle Kalendáře ---
 if (targetElementProKalendar) {
     targetElementProKalendar.parentNode.insertBefore(numberLiProdukty, targetElementProKalendar);
-}*/
+}
 
 // --- 3️⃣ Pomocná funkce pro načtení obalů z Google Sheets ---
 async function nactiObalyzGoogleSheets() {
